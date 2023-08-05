@@ -33,7 +33,8 @@ task jmh(type: JavaExec, dependsOn: sourceSets.main.output) {
         '-p', sourceSets.main.runtimeClasspath.asPath,
         '--add-modules', 'ALL-MODULE-PATH',
         '--add-exports', 'net.minecraftforge.eventbus.jmh/net.minecraftforge.eventbus.benchmarks.jmh_generated=jmh.core',
-        '--add-opens', 'java.base/java.lang.invoke=cpw.mods.securejarhandler'
+        '--add-opens', 'java.base/java.lang.invoke=cpw.mods.securejarhandler',
+        '--add-opens', 'java.base/java.lang.invoke=net.minecraftforge.eventbus',
     ]
     classpath = files(configurations.jmhOnly.asPath)
     mainClass = 'org.openjdk.jmh.Main'
