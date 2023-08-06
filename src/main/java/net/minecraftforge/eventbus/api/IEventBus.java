@@ -71,17 +71,6 @@ public interface IEventBus {
     <T extends Event> void addListener(EventPriority priority, boolean receiveCancelled, Class<T> eventType, Consumer<T> consumer);
 
     /**
-     * Unregister the supplied listener from this EventBus.
-     *
-     * Removes all listeners from events.
-     *
-     * NOTE: Consumers can be stored in a variable if unregistration is required for the Consumer.
-     *
-     * @param object The object, {@link Class} or {@link Consumer} to unsubscribe.
-     */
-    void unregister(Object object);
-
-    /**
      * Submit the event for dispatch to appropriate listeners
      *
      * @param event The event to dispatch to listeners

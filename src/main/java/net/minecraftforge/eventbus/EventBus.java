@@ -42,7 +42,7 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
 
 
     private final LockHelper<Class<?>, ListenerList> listenerLists = new LockHelper<>(IdentityHashMap::new);
-    private ConcurrentHashMap<Object, List<IEventListener>> listeners = new ConcurrentHashMap<>();
+    private final Set<Object> registeredListeners = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final IEventExceptionHandler exceptionHandler;
     private volatile boolean shutdown = false;
 
@@ -113,10 +113,12 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
     @Override
     public void register(final Object target)
     {
-        if (listeners.containsKey(target))
+        // TODO: does this even matter?
+        if (registeredListeners.contains(target))
         {
             return;
         }
+        registeredListeners.add(target);
 
         if (target.getClass() == Class.class) {
             registerClass((Class<?>) target);
@@ -207,7 +209,7 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
             throw new IllegalArgumentException(
                     "Listener for event " + eventClass + " takes an argument that is not a subtype of the base type " + baseType);
         }
-        addToListeners(consumer, eventClass, NamedEventListener.namedWrapper(e-> doCastFilter(filter, eventClass, consumer, e), consumer.getClass()::getName), priority);
+        addToListeners(eventClass, NamedEventListener.namedWrapper(e-> doCastFilter(filter, eventClass, consumer, e), consumer.getClass()::getName), priority);
     }
 
     @SuppressWarnings("unchecked")
@@ -224,16 +226,14 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
         try {
             final ASMEventHandler asm = new ASMEventHandler(this.factory, target, method);
 
-            addToListeners(target, eventType, asm, asm.getPriority());
+            addToListeners(eventType, asm, asm.getPriority());
         } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException | ClassNotFoundException e) {
             LOGGER.error(EVENTBUS,"Error registering event handler: {} {}", eventType, method, e);
         }
     }
 
-    private void addToListeners(final Object target, final Class<?> eventType, final IEventListener listener, final EventPriority priority) {
+    private void addToListeners(final Class<?> eventType, final IEventListener listener, final EventPriority priority) {
         getOrComputeListenerListInst(eventType).register(priority, listener);
-        List<IEventListener> others = listeners.computeIfAbsent(target, k -> Collections.synchronizedList(new ArrayList<>()));
-        others.add(listener);
     }
 
     private ListenerList getOrComputeListenerListInst(Class<?> eventType) {
@@ -241,21 +241,6 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
             return listenerLists.computeIfAbsent(eventType, ListenerList::new);
         } else {
             return listenerLists.computeIfAbsent(eventType, () -> new ListenerList(getOrComputeListenerListInst(eventType.getSuperclass())));
-        }
-    }
-
-    @Override
-    public void unregister(Object object)
-    {
-        List<IEventListener> list = listeners.remove(object);
-        if(list == null)
-            return;
-        for (IEventListener listener : list)
-        {
-            for (ListenerList listenerList : listenerLists.getReadMap().values())
-            {
-                listenerList.unregister(listener);
-            }
         }
     }
 

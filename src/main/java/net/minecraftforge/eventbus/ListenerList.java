@@ -137,11 +137,4 @@ class ListenerList {
         writeLock.release();
         this.forceRebuild();
     }
-
-    public void unregister(IEventListener listener)
-    {
-        writeLock.acquireUninterruptibly();
-        priorities.stream().filter(list -> list.remove(listener)).forEach(list -> this.forceRebuild());
-        writeLock.release();
-    }
 }
