@@ -34,7 +34,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Base Event class that all other events are derived from
  */
-public class Event
+public abstract class Event
 {
     @Retention(value = RUNTIME)
     @Target(value = TYPE)

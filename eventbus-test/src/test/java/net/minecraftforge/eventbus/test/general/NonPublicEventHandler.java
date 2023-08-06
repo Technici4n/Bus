@@ -41,13 +41,15 @@ public class NonPublicEventHandler implements ITestHandler {
 
     private void testCall(IEventBus bus, boolean expected, String name) {
         hit = false;
-        bus.post(new Event());
+        bus.post(new TestEvent());
         assertEquals(expected, hit, name + " did not behave correctly");
     }
 
+    private static class TestEvent extends Event {}
+
     public static class PUBLIC {
         @SubscribeEvent
-        public void handler(Event e) {
+        public void handler(TestEvent e) {
             hit = true;
         }
     }
@@ -61,13 +63,13 @@ public class NonPublicEventHandler implements ITestHandler {
     */
     public static class PROTECTED {
         @SubscribeEvent
-        protected void handler(Event e) {
+        protected void handler(TestEvent e) {
             hit = true;
         }
     }
     public static class DEFAULT {
         @SubscribeEvent
-        void handler(Event e) {
+        void handler(TestEvent e) {
             hit = true;
         }
     }

@@ -6,6 +6,7 @@ import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.test.ITestHandler;
+import net.minecraftforge.eventbus.testjar.DummyEvent;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -23,7 +24,7 @@ public abstract class LambdaHandlerTest implements ITestHandler {
         hit = false;
     }
 
-    public void consumeEvent(Event e) { hit = true; }
+    public void consumeEvent(DummyEvent e) { hit = true; }
     public void consumeSubEvent(SubEvent e) { hit = true; }
 
     public static class Basic extends LambdaHandlerTest {
@@ -31,36 +32,15 @@ public abstract class LambdaHandlerTest implements ITestHandler {
         public void test(Consumer<Class<?>> validator, Supplier<BusBuilder> builder) {
             final IEventBus iEventBus = builder.get().build();
             // Inline
-            iEventBus.addListener((Event e)-> hit = true);
-            iEventBus.post(new Event());
+            iEventBus.addListener((DummyEvent e)-> hit = true);
+            iEventBus.post(new DummyEvent());
             assertTrue(hit, "Inline Lambda was not called");
             hit = false;
             // Method reference
             iEventBus.addListener(this::consumeEvent);
-            iEventBus.post(new Event());
+            iEventBus.post(new DummyEvent());
             assertTrue(hit, "Method reference was not called");
             hit = false;
-        }
-    }
-
-    public static class SubClassEvent extends LambdaHandlerTest {
-        @Override
-        public void test(Consumer<Class<?>> validator, Supplier<BusBuilder> builder) {
-            final IEventBus iEventBus = builder.get().build();
-            // Inline
-            iEventBus.addListener((SubEvent e) -> hit = true);
-            iEventBus.post(new SubEvent());
-            assertTrue(hit, "Inline was not called");
-            hit = false;
-            iEventBus.post(new Event());
-            assertTrue(!hit, "Inline was called on root event");
-            // Method Reference
-            iEventBus.addListener(this::consumeSubEvent);
-            iEventBus.post(new SubEvent());
-            assertTrue(hit, "Method reference was not called");
-            hit = false;
-            iEventBus.post(new Event());
-            assertTrue(!hit, "Method reference was called on root event");
         }
     }
 

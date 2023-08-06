@@ -113,7 +113,7 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
     @Override
     public void register(final Object target)
     {
-        // TODO: does this even matter?
+        // TODO: shouldn't we remove this check?
         if (registeredListeners.contains(target))
         {
             return;
@@ -233,15 +233,15 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
     }
 
     private void addToListeners(final Class<?> eventType, final IEventListener listener, final EventPriority priority) {
+        if (Modifier.isAbstract(eventType.getModifiers())) {
+            throw new IllegalArgumentException("Cannot register a listener for abstract event class " + eventType);
+        }
+
         getOrComputeListenerListInst(eventType).register(priority, listener);
     }
 
     private ListenerList getOrComputeListenerListInst(Class<?> eventType) {
-        if (eventType == Event.class) {
-            return listenerLists.computeIfAbsent(eventType, ListenerList::new);
-        } else {
-            return listenerLists.computeIfAbsent(eventType, () -> new ListenerList(getOrComputeListenerListInst(eventType.getSuperclass())));
-        }
+        return listenerLists.computeIfAbsent(eventType, ListenerList::new);
     }
 
     @Override
@@ -260,8 +260,7 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
 
         ListenerList listenerList = listenerLists.get(event.getClass());
         if (listenerList == null) {
-            // Parent might have a listener, so we must create the list!
-            listenerList = getOrComputeListenerListInst(event.getClass());
+            return false; // No listener
         }
 
         IEventListener[] listeners = listenerList.getListeners();

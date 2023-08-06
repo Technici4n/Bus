@@ -10,8 +10,6 @@ import net.minecraftforge.eventbus.test.general.EventHandlerExceptionTest;
 import net.minecraftforge.eventbus.test.general.LambdaHandlerTest;
 import net.minecraftforge.eventbus.test.general.NonPublicEventHandler;
 import net.minecraftforge.eventbus.test.general.ParallelEventTest;
-import net.minecraftforge.eventbus.test.general.ParentHandlersGetInvokedTest;
-import net.minecraftforge.eventbus.test.general.ParentHandlersGetInvokedTestDummy;
 import net.minecraftforge.eventbus.test.general.ThreadedListenerExceptionTest;
 
 import org.junit.jupiter.api.Disabled;
@@ -19,7 +17,7 @@ import org.junit.jupiter.api.RepeatedTest;
 
 public class TestModLauncher extends TestModLauncherBase {
     @Test
-    public void eventHandlersCanSubscribeToAbstractEvents() {
+    public void eventHandlersCannotSubscribeToAbstractEvents() {
         doTest(new AbstractEventListenerTest() {});
     }
 
@@ -59,11 +57,6 @@ public class TestModLauncher extends TestModLauncherBase {
     }
 
     @Test
-    public void lambdaSubClass() {
-        doTest(new LambdaHandlerTest.SubClassEvent() {});
-    }
-
-    @Test
     public void lambdaGenerics() {
         doTest(new LambdaHandlerTest.Generics() {});
     }
@@ -72,16 +65,6 @@ public class TestModLauncher extends TestModLauncherBase {
     @RepeatedTest(500)
     public void deadlockTest() {
         doTest(new DeadlockingEventTest() {});
-    }
-
-    @Test
-    public void parentHandlerGetsInvoked() {
-        doTest(new ParentHandlersGetInvokedTest() {});
-    }
-
-    @Test
-    public void parentHandlerGetsInvokedDummy() {
-        doTest(new ParentHandlersGetInvokedTestDummy() {});
     }
 
     @RepeatedTest(100)
