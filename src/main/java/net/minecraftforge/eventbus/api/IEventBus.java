@@ -71,62 +71,6 @@ public interface IEventBus {
     <T extends Event> void addListener(EventPriority priority, boolean receiveCancelled, Class<T> eventType, Consumer<T> consumer);
 
     /**
-     * Add a consumer listener for a {@link GenericEvent} subclass, filtered to only be called for the specified
-     * filter {@link Class}.
-     *
-     * @param genericClassFilter A {@link Class} which the {@link GenericEvent} should be filtered for
-     * @param consumer Callback to invoke when a matching event is received
-     * @param <T> The {@link GenericEvent} subclass to listen for
-     * @param <F> The {@link Class} to filter the {@link GenericEvent} for
-     */
-    <T extends GenericEvent<? extends F>, F> void addGenericListener(Class<F> genericClassFilter, Consumer<T> consumer);
-
-    /**
-     * Add a consumer listener with the specified {@link EventPriority} and not receiving cancelled events,
-     * for a {@link GenericEvent} subclass, filtered to only be called for the specified
-     * filter {@link Class}.
-     *
-     * @param genericClassFilter A {@link Class} which the {@link GenericEvent} should be filtered for
-     * @param priority {@link EventPriority} for this listener
-     * @param consumer Callback to invoke when a matching event is received
-     * @param <T> The {@link GenericEvent} subclass to listen for
-     * @param <F> The {@link Class} to filter the {@link GenericEvent} for
-     */
-    <T extends GenericEvent<? extends F>, F> void addGenericListener(Class<F> genericClassFilter, EventPriority priority, Consumer<T> consumer);
-
-    /**
-     * Add a consumer listener with the specified {@link EventPriority} and potentially cancelled events,
-     * for a {@link GenericEvent} subclass, filtered to only be called for the specified
-     * filter {@link Class}.
-     *
-     * @param genericClassFilter A {@link Class} which the {@link GenericEvent} should be filtered for
-     * @param priority {@link EventPriority} for this listener
-     * @param receiveCancelled Indicate if this listener should receive events that have been {@link Cancelable} cancelled
-     * @param consumer Callback to invoke when a matching event is received
-     * @param <T> The {@link GenericEvent} subclass to listen for
-     * @param <F> The {@link Class} to filter the {@link GenericEvent} for
-     */
-    <T extends GenericEvent<? extends F>, F> void addGenericListener(Class<F> genericClassFilter, EventPriority priority, boolean receiveCancelled, Consumer<T> consumer);
-
-    /**
-     * Add a consumer listener with the specified {@link EventPriority} and potentially cancelled events,
-     * for a {@link GenericEvent} subclass, filtered to only be called for the specified
-     * filter {@link Class}.
-
-     * Use this method when one of the other methods fails to determine the concrete {@link GenericEvent} subclass that is
-     * intended to be subscribed to.
-     *
-     * @param genericClassFilter A {@link Class} which the {@link GenericEvent} should be filtered for
-     * @param priority {@link EventPriority} for this listener
-     * @param receiveCancelled Indicate if this listener should receive events that have been {@link Cancelable} cancelled
-     * @param eventType The concrete {@link GenericEvent} subclass to subscribe to
-     * @param consumer Callback to invoke when a matching event is received
-     * @param <T> The {@link GenericEvent} subclass to listen for
-     * @param <F> The {@link Class} to filter the {@link GenericEvent} for
-     */
-    <T extends GenericEvent<? extends F>, F> void addGenericListener(Class<F> genericClassFilter, EventPriority priority, boolean receiveCancelled, Class<T> eventType, Consumer<T> consumer);
-
-    /**
      * Unregister the supplied listener from this EventBus.
      *
      * Removes all listeners from events.

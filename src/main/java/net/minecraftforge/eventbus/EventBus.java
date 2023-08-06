@@ -163,62 +163,24 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
         return e-> ignored || !e.isCanceled();
     }
 
-    private <T extends GenericEvent<? extends F>, F> Predicate<T> passGenericFilter(Class<F> type) {
-        return e->e.getGenericType() == type;
-    }
-
-    private void checkNotGeneric(final Consumer<? extends Event> consumer) {
-        checkNotGeneric(getEventClass(consumer));
-    }
-
-    private void checkNotGeneric(final Class<? extends Event> eventType) {
-        if (GenericEvent.class.isAssignableFrom(eventType)) {
-            throw new IllegalArgumentException("Cannot register a generic event listener with addListener, use addGenericListener");
-        }
-    }
-
     @Override
     public <T extends Event> void addListener(final Consumer<T> consumer) {
-        checkNotGeneric(consumer);
         addListener(EventPriority.NORMAL, consumer);
     }
 
     @Override
     public <T extends Event> void addListener(final EventPriority priority, final Consumer<T> consumer) {
-        checkNotGeneric(consumer);
         addListener(priority, false, consumer);
     }
 
     @Override
     public <T extends Event> void addListener(final EventPriority priority, final boolean receiveCancelled, final Consumer<T> consumer) {
-        checkNotGeneric(consumer);
         addListener(priority, passCancelled(receiveCancelled), consumer);
     }
 
     @Override
     public <T extends Event> void addListener(final EventPriority priority, final boolean receiveCancelled, final Class<T> eventType, final Consumer<T> consumer) {
-        checkNotGeneric(eventType);
         addListener(priority, passCancelled(receiveCancelled), eventType, consumer);
-    }
-
-    @Override
-    public <T extends GenericEvent<? extends F>, F> void addGenericListener(final Class<F> genericClassFilter, final Consumer<T> consumer) {
-        addGenericListener(genericClassFilter, EventPriority.NORMAL, consumer);
-    }
-
-    @Override
-    public <T extends GenericEvent<? extends F>, F> void addGenericListener(final Class<F> genericClassFilter, final EventPriority priority, final Consumer<T> consumer) {
-        addGenericListener(genericClassFilter, priority, false, consumer);
-    }
-
-    @Override
-    public <T extends GenericEvent<? extends F>, F> void addGenericListener(final Class<F> genericClassFilter, final EventPriority priority, final boolean receiveCancelled, final Consumer<T> consumer) {
-        addListener(priority, passGenericFilter(genericClassFilter).and(passCancelled(receiveCancelled)), consumer);
-    }
-
-    @Override
-    public <T extends GenericEvent<? extends F>, F> void addGenericListener(final Class<F> genericClassFilter, final EventPriority priority, final boolean receiveCancelled, final Class<T> eventType, final Consumer<T> consumer) {
-        addListener(priority, passGenericFilter(genericClassFilter).and(passCancelled(receiveCancelled)), eventType, consumer);
     }
 
     @SuppressWarnings("unchecked")
@@ -260,7 +222,7 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
     private void register(Class<?> eventType, Object target, Method method)
     {
         try {
-            final ASMEventHandler asm = new ASMEventHandler(this.factory, target, method, IGenericEvent.class.isAssignableFrom(eventType));
+            final ASMEventHandler asm = new ASMEventHandler(this.factory, target, method);
 
             addToListeners(target, eventType, asm, asm.getPriority());
         } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException | ClassNotFoundException e) {

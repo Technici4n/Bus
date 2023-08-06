@@ -7,7 +7,6 @@ import net.minecraftforge.eventbus.test.general.DeadlockingEventTest;
 import net.minecraftforge.eventbus.test.general.EventBusSubtypeFilterTest;
 import net.minecraftforge.eventbus.test.general.EventFiringEventTest;
 import net.minecraftforge.eventbus.test.general.EventHandlerExceptionTest;
-import net.minecraftforge.eventbus.test.general.GenericListenerTests;
 import net.minecraftforge.eventbus.test.general.LambdaHandlerTest;
 import net.minecraftforge.eventbus.test.general.NonPublicEventHandler;
 import net.minecraftforge.eventbus.test.general.ParallelEventTest;
@@ -94,21 +93,6 @@ public class TestNoLoader extends TestNoLoaderBase {
     @RepeatedTest(100)
     public void testThreadedEventFiring() {
         doTest(new ThreadedListenerExceptionTest() {});
-    }
-
-    @Test
-    public void testGenericListener() {
-        doTest(new GenericListenerTests.Basic() {});
-    }
-
-    @Test
-    public void testGenericListenerRegisteredIncorrectly() {
-        doTest(new GenericListenerTests.IncorrectRegistration() {});
-    }
-
-    @Test
-    public void testGenericListenerWildcard() {
-        doTest(new GenericListenerTests.Wildcard() {});
     }
 
     @Disabled //TODO: Do we want to add checks for this? By Default the methods just silent are ignored.
