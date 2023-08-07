@@ -22,8 +22,8 @@ import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.*;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionSpecBuilder;
-import net.minecraftforge.eventbus.testjar.TestListener;
 
+import net.minecraftforge.eventbus.testjar.DummyClass;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
@@ -141,7 +141,7 @@ public class MockTransformerService implements ITransformationService {
     }
 
     static String getTestJarsPath() throws Exception {
-        Path path = Paths.get(TestListener.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+        Path path = Paths.get(DummyClass.class.getProtectionDomain().getCodeSource().getLocation().toURI());
         String basePath = path.toAbsolutePath().toString();
         return basePath;
     }

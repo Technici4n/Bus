@@ -35,7 +35,9 @@ public interface IEventBus {
      * @param consumer Callback to invoke when a matching event is received
      * @param <T> The {@link Event} subclass to listen for
      */
-    <T extends Event> void addListener(Consumer<T> consumer);
+    default <T extends Event> void addListener(Consumer<T> consumer) {
+        addListener(EventPriority.NORMAL, false, consumer);
+    }
 
     /**
      * Add a consumer listener with the specified {@link EventPriority} and not receiving cancelled events.
@@ -44,7 +46,9 @@ public interface IEventBus {
      * @param consumer Callback to invoke when a matching event is received
      * @param <T> The {@link Event} subclass to listen for
      */
-    <T extends Event> void addListener(EventPriority priority, Consumer<T> consumer);
+    default <T extends Event> void addListener(EventPriority priority, Consumer<T> consumer) {
+        addListener(priority, false, consumer);
+    }
 
     /**
      * Add a consumer listener with the specified {@link EventPriority} and potentially cancelled events.
@@ -68,7 +72,7 @@ public interface IEventBus {
      * @param consumer Callback to invoke when a matching event is received
      * @param <T> The {@link Event} subclass to listen for
      */
-    <T extends Event> void addListener(EventPriority priority, boolean receiveCancelled, Class<T> eventType, Consumer<T> consumer);
+    <T extends Event> void addListener(EventPriority priority, boolean receiveCancelled, Class<T> eventType, Consumer<? super T> consumer);
 
     /**
      * Submit the event for dispatch to appropriate listeners

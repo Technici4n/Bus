@@ -26,7 +26,7 @@ package net.minecraftforge.eventbus.api;
  *
  * @see SubscribeEvent#priority()
  */
-public enum EventPriority implements IEventListener
+public enum EventPriority
 {
     /**
      * Priority of event listeners, listeners will be sorted with respect to this priority level.
@@ -39,12 +39,5 @@ public enum EventPriority implements IEventListener
     HIGH,
     NORMAL,
     LOW,
-    LOWEST; //Last to execute
-
-
-    @Override
-    public void invoke(Event event)
-    {
-        event.setPhase(this);
-    }
+    LOWEST //Last to execute
 }

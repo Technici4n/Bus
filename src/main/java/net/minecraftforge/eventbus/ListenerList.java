@@ -1,21 +1,30 @@
 package net.minecraftforge.eventbus;
 
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.IEventListener;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 class ListenerList {
+    private static final Consumer<Event>[] PHASE_SETTERS;
+    static {
+        EventPriority[] priorities = EventPriority.values();
+        //noinspection unchecked
+        PHASE_SETTERS = new Consumer[priorities.length];
+        for (int i = 0; i < priorities.length; i++) {
+            var priority = priorities[i];
+            PHASE_SETTERS[i] = event -> event.setPhase(priority);
+        }
+    }
+
     // Null if the list needs to be rebuilt
     @Nullable
-    private volatile IEventListener[] listeners = null;
-    private final ArrayList<ArrayList<IEventListener>> priorities;
+    private volatile Consumer<Event>[] listeners = null;
+    private final ArrayList<ArrayList<Consumer<Event>>> priorities;
     private final Object lock = new Object();
 
     ListenerList()
@@ -39,9 +48,9 @@ class ListenerList {
      *
      * @return Array containing listeners
      */
-    public IEventListener[] getListeners()
+    public Consumer<Event>[] getListeners()
     {
-        IEventListener[] ret = listeners;
+        Consumer<Event>[] ret = listeners;
         if (listeners == null) {
             synchronized (lock) {
                 listeners = ret = buildCache();
@@ -53,20 +62,21 @@ class ListenerList {
     /**
      * Rebuild the local Array of listeners, returns early if there is no work to do.
      */
-    private IEventListener[] buildCache()
+    @SuppressWarnings("unchecked")
+    private Consumer<Event>[] buildCache()
     {
-        ArrayList<IEventListener> ret = new ArrayList<>();
+        ArrayList<Consumer<Event>> ret = new ArrayList<>();
         Arrays.stream(EventPriority.values()).forEach(value -> {
-            List<IEventListener> listeners = priorities.get(value.ordinal());
+            List<Consumer<Event>> listeners = priorities.get(value.ordinal());
             if (listeners.size() > 0) {
-                ret.add(value); //Add the priority to notify the event of its current phase.
+                ret.add(PHASE_SETTERS[value.ordinal()]); //Add the priority to notify the event of its current phase.
                 ret.addAll(listeners);
             }
         });
-        return ret.toArray(IEventListener[]::new);
+        return ret.toArray(Consumer[]::new);
     }
 
-    public void register(EventPriority priority, IEventListener listener)
+    public void register(EventPriority priority, Consumer<Event> listener)
     {
         synchronized (lock) {
             priorities.get(priority.ordinal()).add(listener);

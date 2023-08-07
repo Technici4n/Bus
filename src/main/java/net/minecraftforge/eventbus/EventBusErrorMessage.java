@@ -1,21 +1,21 @@
 package net.minecraftforge.eventbus;
 
 import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.eventbus.api.IEventListener;
 import org.apache.logging.log4j.message.Message;
 import org.apache.logging.log4j.util.StringBuilderFormattable;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.function.Consumer;
 
 @SuppressWarnings("serial")
 public class EventBusErrorMessage implements Message, StringBuilderFormattable {
     //private final Event event;
     private final int index;
-    private final IEventListener[] listeners;
+    private final Consumer<Event>[] listeners;
     private final Throwable throwable;
 
-    public EventBusErrorMessage(final Event event, final int index, final IEventListener[] listeners, final Throwable throwable) {
+    public EventBusErrorMessage(final Event event, final int index, final Consumer<Event>[] listeners, final Throwable throwable) {
         //this.event = event;
         this.index = index;
         this.listeners = listeners;

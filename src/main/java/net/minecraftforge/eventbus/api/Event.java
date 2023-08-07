@@ -20,7 +20,6 @@
 package net.minecraftforge.eventbus.api;
 
 import net.minecraftforge.eventbus.EventAnnotationHelper;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

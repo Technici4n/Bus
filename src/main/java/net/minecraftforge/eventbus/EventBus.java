@@ -25,13 +25,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Type;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import static net.minecraftforge.eventbus.LogMarkers.EVENTBUS;
 
@@ -48,7 +46,6 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
 
     private final Class<?> baseType;
     private final boolean checkTypesOnDispatch;
-    private final IEventListenerFactory factory;
 
     @SuppressWarnings("unused")
     private EventBus() {
@@ -56,23 +53,20 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
         this.trackPhases = true;
         this.baseType = Event.class;
         this.checkTypesOnDispatch = checkTypesOnDispatchProperty;
-        this.factory = new LMFListenerFactory();
     }
 
-    private EventBus(final IEventExceptionHandler handler, boolean trackPhase, boolean startShutdown, Class<?> baseType, boolean checkTypesOnDispatch, IEventListenerFactory factory) {
+    private EventBus(final IEventExceptionHandler handler, boolean trackPhase, boolean startShutdown, Class<?> baseType, boolean checkTypesOnDispatch) {
         if (handler == null) exceptionHandler = this;
         else exceptionHandler = handler;
         this.trackPhases = trackPhase;
         this.shutdown = startShutdown;
         this.baseType = baseType;
         this.checkTypesOnDispatch = checkTypesOnDispatch || checkTypesOnDispatchProperty;
-        this.factory = factory;
     }
 
     public EventBus(final BusBuilderImpl busBuilder) {
         this(busBuilder.exceptionHandler, busBuilder.trackPhases, busBuilder.startShutdown,
-             busBuilder.markerType, busBuilder.checkTypesOnDispatch,
-             new LMFListenerFactory());
+             busBuilder.markerType, busBuilder.checkTypesOnDispatch);
     }
 
     private void registerClass(final Class<?> clazz) {
@@ -158,31 +152,19 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
             throw new IllegalArgumentException("Failed to create ASMEventHandler for " + target.getClass().getName() + "." + method.getName() + Type.getMethodDescriptor(method) + " it is not public and our transformer is disabled");
         }
 
-        register(eventType, target, real);
-    }
+        try {
+            Consumer<Event> unreflectedListener = EventListenerUnreflection.unreflectMethod(method, target);
 
-    private <T extends Event> Predicate<T> passCancelled(final boolean ignored) {
-        return e-> ignored || !e.isCanceled();
-    }
-
-    @Override
-    public <T extends Event> void addListener(final Consumer<T> consumer) {
-        addListener(EventPriority.NORMAL, consumer);
-    }
-
-    @Override
-    public <T extends Event> void addListener(final EventPriority priority, final Consumer<T> consumer) {
-        addListener(priority, false, consumer);
+            var subscribeInfo = method.getAnnotation(SubscribeEvent.class);
+            addListener(subscribeInfo.priority(), subscribeInfo.receiveCanceled(), (Class<? extends Event>) eventType, unreflectedListener);
+        } catch (Throwable e) {
+            LOGGER.error(EVENTBUS, "Error registering event handler: {} {}", eventType, method, e);
+        }
     }
 
     @Override
     public <T extends Event> void addListener(final EventPriority priority, final boolean receiveCancelled, final Consumer<T> consumer) {
-        addListener(priority, passCancelled(receiveCancelled), consumer);
-    }
-
-    @Override
-    public <T extends Event> void addListener(final EventPriority priority, final boolean receiveCancelled, final Class<T> eventType, final Consumer<T> consumer) {
-        addListener(priority, passCancelled(receiveCancelled), eventType, consumer);
+        addListener(priority, receiveCancelled, getEventClass(consumer), consumer);
     }
 
     @SuppressWarnings("unchecked")
@@ -195,58 +177,26 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
         return eventClass;
     }
 
-    private <T extends Event> void addListener(final EventPriority priority, final Predicate<? super T> filter, final Consumer<T> consumer) {
-        Class<T> eventClass = getEventClass(consumer);
-        if (Objects.equals(eventClass, Event.class))
-            LOGGER.warn(EVENTBUS,"Attempting to add a Lambda listener with computed generic type of Event. " +
-                    "Are you sure this is what you meant? NOTE : there are complex lambda forms where " +
-                    "the generic type information is erased and cannot be recovered at runtime.");
-        addListener(priority, filter, eventClass, consumer);
-    }
-
-    private <T extends Event> void addListener(final EventPriority priority, final Predicate<? super T> filter, final Class<T> eventClass, final Consumer<T> consumer) {
-        if (baseType != Event.class && !baseType.isAssignableFrom(eventClass)) {
+    @Override
+    public <T extends Event> void addListener(final EventPriority priority, final boolean receiveCancelled, final Class<T> eventType, final Consumer<? super T> consumer) {
+        if (baseType != Event.class && !baseType.isAssignableFrom(eventType)) {
             throw new IllegalArgumentException(
-                    "Listener for event " + eventClass + " takes an argument that is not a subtype of the base type " + baseType);
+                    "Listener for event " + eventType + " takes an argument that is not a subtype of the base type " + baseType);
         }
-        addToListeners(eventClass, NamedEventListener.namedWrapper(e-> doCastFilter(filter, eventClass, consumer, e), consumer.getClass()::getName), priority);
-    }
 
-    @SuppressWarnings("unchecked")
-    private <T extends Event> void doCastFilter(final Predicate<? super T> filter, final Class<T> eventClass, final Consumer<T> consumer, final Event e) {
-        T cast = (T)e;
-        if (filter.test(cast))
-        {
-            consumer.accept(cast);
-        }
-    }
-
-    private void register(Class<?> eventType, Object target, Method method)
-    {
-        try {
-            final ASMEventHandler asm = new ASMEventHandler(this.factory, target, method);
-
-            addToListeners(eventType, asm, asm.getPriority());
-        } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException | ClassNotFoundException e) {
-            LOGGER.error(EVENTBUS,"Error registering event handler: {} {}", eventType, method, e);
-        }
-    }
-
-    private void addToListeners(final Class<?> eventType, final IEventListener listener, final EventPriority priority) {
         if (Modifier.isAbstract(eventType.getModifiers())) {
             throw new IllegalArgumentException("Cannot register a listener for abstract event class " + eventType);
         }
 
-        getOrComputeListenerListInst(eventType).register(priority, listener);
-    }
-
-    private ListenerList getOrComputeListenerListInst(Class<?> eventType) {
-        return listenerLists.computeIfAbsent(eventType, ListenerList::new);
+        @SuppressWarnings("unchecked")
+        var castConsumer = (Consumer<Event>) consumer;
+        var listener = receiveCancelled ? castConsumer : new CanceledEventFilter(castConsumer);
+        listenerLists.computeIfAbsent(eventType, ListenerList::new).register(priority, listener);
     }
 
     @Override
     public boolean post(Event event) {
-        return post(event, (IEventListener::invoke));
+        return post(event, Consumer::accept);
     }
 
     @Override
@@ -263,7 +213,7 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
             return false; // No listener
         }
 
-        IEventListener[] listeners = listenerList.getListeners();
+        Consumer<Event>[] listeners = listenerList.getListeners();
         int index = 0;
         try
         {
@@ -282,7 +232,7 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
     }
 
     @Override
-    public void handleException(IEventBus bus, Event event, IEventListener[] listeners, int index, Throwable throwable)
+    public void handleException(IEventBus bus, Event event, Consumer<Event>[] listeners, int index, Throwable throwable)
     {
         LOGGER.error(EVENTBUS, ()->new EventBusErrorMessage(event, index, listeners, throwable));
     }

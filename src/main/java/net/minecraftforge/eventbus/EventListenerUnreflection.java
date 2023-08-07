@@ -1,15 +1,15 @@
 package net.minecraftforge.eventbus;
 
 import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.eventbus.api.IEventListener;
 
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.function.Consumer;
 
-public class LMFListenerFactory implements IEventListenerFactory {
+public class EventListenerUnreflection {
     private static final MethodHandles.Lookup IMPL_LOOKUP;
 
     static {
@@ -23,34 +23,34 @@ public class LMFListenerFactory implements IEventListenerFactory {
         }
     }
 
-    private static final MethodType LISTENER_INVOKE = MethodType.methodType(void.class, Event.class);
+    private static final MethodType LISTENER_INVOKE = MethodType.methodType(void.class, Object.class);
 
-    @Override
-    public IEventListener create(Method callback, Object target) {
+    @SuppressWarnings("unchecked")
+    public static Consumer<Event> unreflectMethod(Method callback, Object target) {
         try {
             var callbackClass = callback.getDeclaringClass();
 
             // We need to read the other module to perform java.lang.invoke operations with it
-            getClass().getModule().addReads(callbackClass.getModule());
+            EventListenerUnreflection.class.getModule().addReads(callbackClass.getModule());
 
             // Sadly this doesn't grant the MODULE bit and thus doesn't allow defining new classes in the module.
             //var lookup = MethodHandles.privateLookupIn(callbackClass, MethodHandles.lookup());
             var lookup = IMPL_LOOKUP.in(callbackClass);
 
             if (Modifier.isStatic(callback.getModifiers())) {
-                return (IEventListener) LambdaMetafactory.metafactory(
+                return (Consumer<Event>) LambdaMetafactory.metafactory(
                         lookup,
-                        "invoke",
-                        MethodType.methodType(IEventListener.class),
+                        "accept",
+                        MethodType.methodType(Consumer.class),
                         LISTENER_INVOKE,
                         lookup.unreflect(callback),
                         MethodType.methodType(void.class, callback.getParameterTypes()[0])
                 ).getTarget().invoke();
             } else {
-                return (IEventListener) LambdaMetafactory.metafactory(
+                return (Consumer<Event>) LambdaMetafactory.metafactory(
                         lookup,
-                        "invoke",
-                        MethodType.methodType(IEventListener.class, callbackClass),
+                        "accept",
+                        MethodType.methodType(Consumer.class, callbackClass),
                         LISTENER_INVOKE,
                         lookup.unreflect(callback),
                         MethodType.methodType(void.class, callback.getParameterTypes()[0])

@@ -19,6 +19,8 @@
 
 package net.minecraftforge.eventbus.api;
 
+import java.util.function.Consumer;
+
 public interface IEventExceptionHandler
 {
     /**
@@ -31,5 +33,5 @@ public interface IEventExceptionHandler
      * @param index Index for the current listener being fired.
      * @param throwable The throwable being thrown
      */
-    void handleException(IEventBus bus, Event event, IEventListener[] listeners, int index, Throwable throwable);
+    void handleException(IEventBus bus, Event event, Consumer<Event>[] listeners, int index, Throwable throwable);
 }
