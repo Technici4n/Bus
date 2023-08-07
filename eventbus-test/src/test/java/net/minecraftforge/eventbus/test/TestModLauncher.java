@@ -1,5 +1,6 @@
 package net.minecraftforge.eventbus.test;
 
+import net.minecraftforge.eventbus.test.general.ParallelPostEventTest;
 import org.junit.jupiter.api.Test;
 
 import net.minecraftforge.eventbus.test.general.AbstractEventListenerTest;
@@ -75,6 +76,11 @@ public class TestModLauncher extends TestModLauncherBase {
     @Test
     public void testNonPublicEventHandler() {
         doTest(new NonPublicEventHandler(true) {});
+    }
+
+    @Test
+    public void testParallelPost() {
+        doTest(new ParallelPostEventTest() {});
     }
 
 }

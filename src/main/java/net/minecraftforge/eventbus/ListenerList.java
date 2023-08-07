@@ -2,6 +2,7 @@ package net.minecraftforge.eventbus;
 
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.ParallelEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -15,8 +16,9 @@ class ListenerList {
     private volatile Consumer<Event>[] listeners = null;
     private final ArrayList<ArrayList<Consumer<Event>>> priorities;
     private final Object lock = new Object();
+    private final boolean isParallel;
 
-    ListenerList()
+    ListenerList(Class<? extends Event> eventType)
     {
         int count = EventPriority.values().length;
         priorities = new ArrayList<>(count);
@@ -25,6 +27,8 @@ class ListenerList {
         {
             priorities.add(new ArrayList<>());
         }
+
+        isParallel = ParallelEvent.class.isAssignableFrom(eventType);
     }
 
     /**
@@ -59,7 +63,11 @@ class ListenerList {
             List<Consumer<Event>> listeners = priorities.get(value.ordinal());
             if (listeners.size() > 0) {
                 ret.add(value); //Add the priority to notify the event of its current phase.
-                ret.addAll(listeners);
+                if (isParallel) {
+                    ret.add(new ParallelListenerGroup(listeners.toArray(Consumer[]::new)));
+                } else {
+                    ret.addAll(listeners);
+                }
             }
         });
         return ret.toArray(Consumer[]::new);

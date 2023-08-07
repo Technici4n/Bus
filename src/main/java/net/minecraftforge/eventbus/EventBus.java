@@ -188,10 +188,14 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
             throw new IllegalArgumentException("Cannot register a listener for abstract event class " + eventType);
         }
 
+        if (EventAnnotationHelper.isCancelable(eventType) && ParallelEvent.class.isAssignableFrom(eventType)) {
+            throw new IllegalArgumentException("Event class " + eventType + " is parallel, it cannot be cancelable");
+        }
+
         @SuppressWarnings("unchecked")
         var castConsumer = (Consumer<Event>) consumer;
         Consumer<Event> listener = !EventAnnotationHelper.isCancelable(eventType) || receiveCancelled ? castConsumer : new CanceledEventFilter(castConsumer);
-        listenerLists.computeIfAbsent(eventType, ListenerList::new).register(priority, listener);
+        listenerLists.computeIfAbsent(eventType, () -> new ListenerList(eventType)).register(priority, listener);
     }
 
     @Override
