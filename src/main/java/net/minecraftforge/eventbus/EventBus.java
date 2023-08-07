@@ -190,7 +190,7 @@ public class EventBus implements IEventExceptionHandler, IEventBus {
 
         @SuppressWarnings("unchecked")
         var castConsumer = (Consumer<Event>) consumer;
-        var listener = receiveCancelled ? castConsumer : new CanceledEventFilter(castConsumer);
+        Consumer<Event> listener = !EventAnnotationHelper.isCancelable(eventType) || receiveCancelled ? castConsumer : new CanceledEventFilter(castConsumer);
         listenerLists.computeIfAbsent(eventType, ListenerList::new).register(priority, listener);
     }
 
