@@ -1,5 +1,6 @@
 package net.minecraftforge.eventbus.test;
 
+import net.minecraftforge.eventbus.test.general.EventReuseTest;
 import net.minecraftforge.eventbus.test.general.ParallelPostEventTest;
 import org.junit.jupiter.api.Test;
 
@@ -88,5 +89,10 @@ public class TestNoLoader extends TestNoLoaderBase {
     @Test
     public void testParallelPost() {
         doTest(new ParallelPostEventTest() {});
+    }
+
+    @Test
+    public void testEventReuse() {
+        doTest(new EventReuseTest() {});
     }
 }

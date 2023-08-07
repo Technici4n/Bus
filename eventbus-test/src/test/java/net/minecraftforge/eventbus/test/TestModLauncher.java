@@ -1,5 +1,6 @@
 package net.minecraftforge.eventbus.test;
 
+import net.minecraftforge.eventbus.test.general.EventReuseTest;
 import net.minecraftforge.eventbus.test.general.ParallelPostEventTest;
 import org.junit.jupiter.api.Test;
 
@@ -83,4 +84,8 @@ public class TestModLauncher extends TestModLauncherBase {
         doTest(new ParallelPostEventTest() {});
     }
 
+    @Test
+    public void testEventReuse() {
+        doTest(new EventReuseTest() {});
+    }
 }

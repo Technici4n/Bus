@@ -139,4 +139,14 @@ public abstract class Event
         if (prev >= value.ordinal()) throw new IllegalArgumentException("Attempted to set event phase to "+ value +" when already "+ phase);
         phase = value;
     }
+
+    /**
+     * Reset the event's internal state, so the same object can be fired again, saving on object allocations.
+     */
+    protected void reset()
+    {
+        isCanceled = false;
+        result = Result.DEFAULT;
+        phase = null;
+    }
 }

@@ -56,8 +56,6 @@ public class ParallelPostEventTest implements ITestHandler {
         synchronized (ParallelPostEventTest.class) {
             waitingThreads--;
         }
-
-        throw new RuntimeException();
     }
 
     @Override
