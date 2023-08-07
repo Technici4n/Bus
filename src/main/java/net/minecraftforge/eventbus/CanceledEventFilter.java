@@ -20,6 +20,6 @@ public class CanceledEventFilter implements Consumer<Event> {
 
     @Override
     public String toString() {
-        return delegate.toString() + " (filtered)";
+        return delegate.toString() + " (receiveCanceled=false)";
     }
 }

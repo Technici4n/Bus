@@ -19,6 +19,8 @@
 
 package net.minecraftforge.eventbus.api;
 
+import java.util.function.Consumer;
+
 /**
  * Different priorities for {@link Event} listeners.
  *
@@ -26,7 +28,7 @@ package net.minecraftforge.eventbus.api;
  *
  * @see SubscribeEvent#priority()
  */
-public enum EventPriority
+public enum EventPriority implements Consumer<Event>
 {
     /**
      * Priority of event listeners, listeners will be sorted with respect to this priority level.
@@ -39,5 +41,10 @@ public enum EventPriority
     HIGH,
     NORMAL,
     LOW,
-    LOWEST //Last to execute
+    LOWEST; //Last to execute
+
+    @Override
+    public void accept(Event event) {
+        event.setPhase(this);
+    }
 }

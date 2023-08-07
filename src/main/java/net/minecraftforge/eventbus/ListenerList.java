@@ -10,17 +10,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 class ListenerList {
-    private static final Consumer<Event>[] PHASE_SETTERS;
-    static {
-        EventPriority[] priorities = EventPriority.values();
-        //noinspection unchecked
-        PHASE_SETTERS = new Consumer[priorities.length];
-        for (int i = 0; i < priorities.length; i++) {
-            var priority = priorities[i];
-            PHASE_SETTERS[i] = event -> event.setPhase(priority);
-        }
-    }
-
     // Null if the list needs to be rebuilt
     @Nullable
     private volatile Consumer<Event>[] listeners = null;
@@ -69,7 +58,7 @@ class ListenerList {
         Arrays.stream(EventPriority.values()).forEach(value -> {
             List<Consumer<Event>> listeners = priorities.get(value.ordinal());
             if (listeners.size() > 0) {
-                ret.add(PHASE_SETTERS[value.ordinal()]); //Add the priority to notify the event of its current phase.
+                ret.add(value); //Add the priority to notify the event of its current phase.
                 ret.addAll(listeners);
             }
         });
