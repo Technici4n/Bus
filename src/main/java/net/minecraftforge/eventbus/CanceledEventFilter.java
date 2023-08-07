@@ -4,7 +4,7 @@ import net.minecraftforge.eventbus.api.Event;
 
 import java.util.function.Consumer;
 
-public class CanceledEventFilter implements Consumer<Event> {
+class CanceledEventFilter implements Consumer<Event> {
     private final Consumer<Event> delegate;
 
     public CanceledEventFilter(Consumer<Event> delegate) {

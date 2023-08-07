@@ -12,7 +12,7 @@ import java.util.function.Supplier;
  * Helper class that should be faster then ConcurrentHashMap,
  * yet still manages to properly deal with many threads.
  */
-public class LockHelper<K,V> {
+class LockHelper<K,V> {
     private final IntFunction<Map<K, V>> mapConstructor;
     /**
      * Only modify this map while holding the lock object!

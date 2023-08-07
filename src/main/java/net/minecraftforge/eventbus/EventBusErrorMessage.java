@@ -8,8 +8,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.function.Consumer;
 
-@SuppressWarnings("serial")
-public class EventBusErrorMessage implements Message, StringBuilderFormattable {
+class EventBusErrorMessage implements Message, StringBuilderFormattable {
     //private final Event event;
     private final int index;
     private final Consumer<Event>[] listeners;

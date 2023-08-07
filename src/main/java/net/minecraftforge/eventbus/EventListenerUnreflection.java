@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.function.Consumer;
 
-public class EventListenerUnreflection {
+class EventListenerUnreflection {
     private static final MethodHandles.Lookup IMPL_LOOKUP;
 
     static {
