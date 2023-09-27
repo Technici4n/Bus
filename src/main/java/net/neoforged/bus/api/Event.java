@@ -56,7 +56,7 @@ public class Event
      * Note:
      * Events with the Cancelable annotation will have this method automatically added to return true.
      */
-    public boolean isCancelable()
+    public final boolean isCancelable()
     {
         return EventListenerHelper.isCancelable(this.getClass());
     }
@@ -65,7 +65,7 @@ public class Event
      * Determine if this event is canceled and should stop executing.
      * @return The current canceled state
      */
-    public boolean isCanceled()
+    public final boolean isCanceled()
     {
         return isCanceled;
     }
@@ -97,7 +97,7 @@ public class Event
      * Note:
      * Events with the HasResult annotation will have this method automatically added to return true.
      */
-    public boolean hasResult()
+    public final boolean hasResult()
     {
         return EventListenerHelper.hasResult(this.getClass());
     }
@@ -105,7 +105,7 @@ public class Event
     /**
      * Returns the value set as the result of this event
      */
-    public Result getResult()
+    public final Result getResult()
     {
         return result;
     }
@@ -133,7 +133,7 @@ public class Event
      *
      * @return Listener List
      */
-    public ListenerList getListenerList()
+    public final ListenerList getListenerList()
     {
         return EventListenerHelper.getListenerListInternal(this.getClass(), true);
     }
