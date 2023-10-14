@@ -49,4 +49,5 @@ tasks.register('jmh', JavaExec).configure {
     args    '-rff', project.file("${rootProject.buildDir}/jmh_results.txt")  // results file
     args    'net.neoforged.bus.benchmarks.FewListenersBenchmark'
     args    'net.neoforged.bus.benchmarks.ManyListenersBenchmark'
+    args    'net.neoforged.bus.benchmarks.ManyDifferentListenersBenchmark'
 }
