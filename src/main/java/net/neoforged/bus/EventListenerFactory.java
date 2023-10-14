@@ -1,7 +1,7 @@
 package net.neoforged.bus;
 
 import net.neoforged.bus.api.Event;
-import net.neoforged.bus.api.IEventListener;
+import net.neoforged.bus.api.EventListener;
 import net.neoforged.bus.api.SubscribeEvent;
 import org.objectweb.asm.*;
 
@@ -16,13 +16,13 @@ import java.lang.reflect.Modifier;
 import static org.objectweb.asm.Opcodes.*;
 
 /**
- * Manages generation of {@link IEventListener} instances from a {@link SubscribeEvent} method,
+ * Manages generation of {@link EventListener} instances from a {@link SubscribeEvent} method,
  * using {@link LambdaMetafactory}.
  */
 class EventListenerFactory {
     private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
-    private static final String[] HANDLER_INTERFACES = new String[]{Type.getInternalName(IEventListener.class)};
+    private static final String HANDLER_DESC = Type.getInternalName(EventListener.class);
 
     private static final String HANDLER_FUNC_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Event.class));
     private static final String INSTANCE_FUNC_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object.class), Type.getType(Event.class));
@@ -65,7 +65,7 @@ class EventListenerFactory {
         ClassWriter cv = new ClassWriter(0);
 
         String desc = name.replace('.', '/');
-        cv.visit(V16, ACC_PUBLIC | ACC_FINAL, desc, null, "java/lang/Object", HANDLER_INTERFACES);
+        cv.visit(V16, ACC_PUBLIC | ACC_FINAL, desc, null, HANDLER_DESC, null);
 
         cv.visitSource(".dynamic", null);
         if (!isStatic) {
@@ -75,7 +75,7 @@ class EventListenerFactory {
             MethodVisitor mv = cv.visitMethod(ACC_PUBLIC, "<init>", isStatic ? "()V" : "(Ljava/lang/Object;)V", null, null);
             mv.visitCode();
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+            mv.visitMethodInsn(INVOKESPECIAL, HANDLER_DESC, "<init>", "()V", false);
             if (!isStatic) {
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 1);
@@ -107,14 +107,14 @@ class EventListenerFactory {
         return cv.toByteArray();
     }
 
-    public static IEventListener create(Method callback, Object target) {
+    public static EventListener create(Method callback, Object target) {
         try {
             var factory = getEventListenerFactory(callback);
 
             if (Modifier.isStatic(callback.getModifiers())) {
-                return (IEventListener) factory.invoke();
+                return (EventListener) factory.invoke();
             } else {
-                return (IEventListener) factory.invoke(target);
+                return (EventListener) factory.invoke(target);
             }
         } catch (Throwable e) {
             throw new RuntimeException("Failed to create IEventListener", e);
